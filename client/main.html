@@ -1,0 +1,39 @@
+<head>
+  <title>Laze Boss</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,700|Teko&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/><meta charset="UTF-8"/>
+</head>
+
+<body>
+</body>
+
+<template name='main'>
+  <div id="main">
+  </div>
+</template>
+
+<template name='loading'>
+  <div class='loading flex'>
+    <div class='box'>
+    <span>Loading</span>
+    </div>
+  </div>
+</template>
+  
+<template name='login'>
+  <div class='login flex'>
+    <div class='box'>
+      {{#if showReturning}}
+        <input class='loginUsername' type='username' name='username' placeholder='Username'>
+        <input class='loginEmail' type='email' name='email' placeholder='Email'>
+        <input class='loginPassword' type='password' name='password' placeholder='Password'>
+        <div class='button round-sm noselect signIn'>Sign In</div>
+        <div class='button round-sm noselect forgotPassword'>Forgot Password</div>
+        <div class='button round-sm noselect notReturning'>Back</div>
+      {{else}}
+        <div class='button round-sm noselect signIn'>Returning User</div>
+        <div class='button round-sm noselect createAccount'>New User</div>
+      {{/if}}
+    </div>
+  </div>
+</template>
