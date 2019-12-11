@@ -39,7 +39,7 @@ Template.main.onRendered(function () {
       width: window.innerWidth,
       height: window.innerHeight,
       parent: 'main',
-      backgroundColor: '#4c6e79',
+      backgroundColor: '#1a3842',
       scene: {
         preload: preload,
         create: create,
@@ -90,7 +90,7 @@ Template.main.onRendered(function () {
       task_boxes.push( this.add.sprite(710, 82, 'task-item-box-gray' ).setInteractive({ cursor: 'pointer' }) );
       if ( i == 1 ) {
         let skill_button = [];
-        skill_button.push( this.add.sprite(151/2, 151/2, 'skill-circle' ) );
+        skill_button.push( this.add.sprite(151/2, 151/2, 'skill-circle' ).setInteractive({ cursor: 'pointer' }) );
         // Full Progress Phaser.Math.DegToRad(130), Phaser.Math.DegToRad(410)
         skill_button.push( this.add.graphics().slice(151/2, 151/2, 70, Phaser.Math.DegToRad(130), Phaser.Math.DegToRad(158) ).fillStyle(0x52da52, 1).fillPath().strokePath() );
         skill_button.push( this.add.sprite(151/2, 151/2, 'skill-circle-cover' ) );
@@ -148,11 +148,11 @@ Template.main.onRendered(function () {
       };
     });
     this.input.on('wheel', function (pointer, contBox, deltaX, deltaY, deltaZ) {
-      if ( container.y+deltaY <= 0 && container.y+deltaY >= contHeight ) {
-        container.y += deltaY;
-      } else if ( container.y+deltaY > 0 ) {
+      if ( container.y-deltaY <= 0 && container.y-deltaY >= contHeight ) {
+        container.y -= deltaY;
+      } else if ( container.y-deltaY > 0 ) {
         container.y = 0;
-      } else if ( container.y+deltaY < contHeight ) {
+      } else if ( container.y-deltaY < contHeight ) {
         container.y = contHeight;
       };
     });
@@ -169,27 +169,16 @@ Template.main.onRendered(function () {
       let slow = 0.9;
       if ( !dragging && velocity && container.y-velocity <= 0 && container.y-velocity >= contHeight ) {
         container.y -= velocity;
-        if ( velocity > 0 ) {
-          if ( velocity*slow > 0 ) {
-            velocity *= slow
-          } else {
-            velocity = 0;
-          };
-        } else if ( velocity < 0 ) {
-          if ( velocity*slow < 0 ) {
-            velocity *= slow
-          } else {
-            velocity = 0;
-          };
-        };
+        velocity *= slow
+        if ( velocity <= 1 && velocity >= -1 )
+        velocity = 0;        
       } else if ( !dragging && velocity && container.y-velocity > 0 ) {
         container.y = 0;
         velocity = 0;
       } else if ( !dragging && velocity && container.y-velocity < contHeight ) {
         container.y = contHeight;
         velocity = 0;
-      };
-  
+      };  
       requestAnimationFrame( step );
     };
     step();
