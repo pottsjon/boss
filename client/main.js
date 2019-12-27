@@ -57,6 +57,9 @@ Template.main.onRendered(function () {
     this.load.image('skill-plate-small', 'assets/accents/skill-plate-small.png');
     this.load.image('name-tag', 'assets/accents/name-tag.png');
     this.load.image('details', 'assets/buttons/details.png');
+    this.load.image('round-brown', 'assets/buttons/round-brown.png');
+    this.load.image('details-icon', 'assets/buttons/details-icon.png');
+    this.load.image('upgrade-icon', 'assets/buttons/upgrade-icon.png');
     this.load.image('pill-blue', 'assets/accents/pill-blue.png');
     this.load.image('happiness', 'assets/icons/happiness.png');
     this.load.image('usefulnesss', 'assets/icons/usefulnesss.png');
@@ -290,25 +293,67 @@ Template.main.onRendered(function () {
     stone_header = main.add.container(0, 198 );
     bg_elements.push( stone_header );
 
+    const structures = ['storage','textile','tannery','sawmill','forge','melee','ranged','plate','leathers','clothes'];
+
     // wooden background
-    let wooden = main.add.sprite(4, -800, 'wooden' );
+    let wooden = main.add.container(4, -800 );
+    wooden.add( main.add.sprite(4, 0, 'wooden' ) );
+    let structure_x = 0;
+    let structure_y = 0;
+    for ( let i = 0; structures.length-1 >= i; i++ ) {
+      const x = -230+(structure_x*235);
+      const y = -340+(Math.floor(structure_y/3)*250);
+      wooden.add( main.add.sprite(x-2, y+2, structures[i] ).setTint('#111111') );
+      wooden.add( main.add.sprite(x, y, structures[i] ) );
+      wooden.add( main.add.text(x-115, y-40, 'LEVEL '+i, {
+        fontFamily: 'Roboto',
+        fontSize: 28,
+        fontStyle: 'bold',
+        color: '#ffffff',
+        align: 'center',
+        fixedWidth: 230
+      }).setStroke('#111111', 5));
+      wooden.add( main.add.graphics().fillStyle(0xdaf1da, 1).lineStyle(4, 0x05230c).fillRect(x-63, y-5, 123, 16).strokeRect(x-63, y-5, 123, 16) );
+      const progress = (Math.floor(Math.random()*123)+1);
+      wooden.add( main.add.graphics().fillStyle(0x52da52, 1).lineStyle(2, 0x05230c).fillRect(x-63, y-5, progress, 16).strokeRect(x-63, y-5, progress, 16) );
+      const text = (Math.floor(Math.random()*100)+1) >= 25 ? "OWNED" : "2:15:47:21";
+      wooden.add( main.add.text(x-115, y+10, text, {
+        fontFamily: 'Roboto',
+        fontSize: 22,
+        fontStyle: 'bold',
+        color: '#ffffff',
+        align: 'center',
+        fixedWidth: 230
+      }).setStroke('#111111', 5)); 
+      wooden.add( main.add.sprite(x-40, y+80, 'round-brown' ).setInteractive({ cursor: 'pointer' }) );  
+      wooden.add( main.add.sprite(x-40, y+80, 'details-icon' ) );  
+      wooden.add( main.add.sprite(x+40, y+80, 'round-brown' ).setInteractive({ cursor: 'pointer' }) );
+      wooden.add( main.add.sprite(x+40, y+80, 'upgrade-icon' ) );  
+      structure_x++;
+      structure_y++;
+      if ( structure_x >= 3 )
+      structure_x = 0;
+    }
     bg_elements.push( wooden );
 
     // wooden header assets
     wooden_header = main.add.container(-5, -200 );
     wooden_header.add( main.add.sprite(0, 0, 'wooden-header' ) );
     wooden_header.add( main.add.graphics().fillStyle(0x3b2315, 1).lineStyle(2, 0x2f180b).fillRoundedRect(-361, -58, 718, 74, 12).strokeRoundedRect(-361, -58, 718, 74, 12) );
-    wooden_header.add( main.add.sprite(-320, -20, 'storage-icon' ).setInteractive({ cursor: 'pointer' }) );
-    wooden_header.add( main.add.sprite(-250, -20, 'textile-icon' ).setInteractive({ cursor: 'pointer' }) );
-    wooden_header.add( main.add.sprite(-180, -20, 'tannery-icon' ).setInteractive({ cursor: 'pointer' }) );
-    wooden_header.add( main.add.sprite(-110, -20, 'sawmill-icon' ).setInteractive({ cursor: 'pointer' }) );
-    wooden_header.add( main.add.sprite(-40, -20, 'forge-icon' ).setInteractive({ cursor: 'pointer' }) );
-    wooden_header.add( main.add.sprite(30, -20, 'melee-icon' ).setInteractive({ cursor: 'pointer' }) );
-    wooden_header.add( main.add.sprite(100, -20, 'ranged-icon' ).setInteractive({ cursor: 'pointer' }) );
-    wooden_header.add( main.add.sprite(170, -20, 'plate-icon' ).setInteractive({ cursor: 'pointer' }) );
-    wooden_header.add( main.add.sprite(250, -20, 'leathers-icon' ).setInteractive({ cursor: 'pointer' }) );
-    wooden_header.add( main.add.sprite(320, -20, 'clothes-icon' ).setInteractive({ cursor: 'pointer' }) );
-    wooden_header.add( main.add.sprite(-265, 90, 'pill-header' ) );
+    let structure_tints = [];
+    for ( let i = 0; structures.length-1 >= i; i++ ) {
+      wooden_header.add( main.add.sprite(-320+(i*70), -20, structures[i]+'-icon' ).setInteractive({ cursor: 'pointer' }).on('pointerdown', function () {
+        const tinted = structure_tints.indexOf(structures[i]);
+        if ( tinted < 0 ) {
+        structure_tints.push(structures[i]);
+        this.setTint(0x414141);
+        } else {
+          structure_tints.splice(tinted, 1);
+          this.clearTint();          
+        };
+      }) );
+    }
+    wooden_header.add( main.add.sprite(-265, 90, 'pill-header' ).setInteractive({ cursor: 'pointer' }) );
     wooden_header.add( main.add.text(-350, 37, 'Buildings', {
       fontFamily: 'Roboto',
       fontSize: 22,
@@ -324,7 +369,7 @@ Template.main.onRendered(function () {
       align: 'center',
       fixedWidth: 167
     }).setStroke('#3a2519', 6));
-    wooden_header.add( main.add.sprite(-88, 90, 'pill-header' ) );
+    wooden_header.add( main.add.sprite(-88, 90, 'pill-header' ).setInteractive({ cursor: 'pointer' }) );
     wooden_header.add( main.add.text(-172, 37, 'For Sale', {
       fontFamily: 'Roboto',
       fontSize: 22,
@@ -340,7 +385,7 @@ Template.main.onRendered(function () {
       align: 'center',
       fixedWidth: 167
     }).setStroke('#3a2519', 6));
-    wooden_header.add( main.add.sprite(89, 90, 'pill-header' ) );
+    wooden_header.add( main.add.sprite(89, 90, 'pill-header' ).setInteractive({ cursor: 'pointer' }) );
     wooden_header.add( main.add.text(5, 37, 'For Rent', {
       fontFamily: 'Roboto',
       fontSize: 22,
@@ -356,8 +401,23 @@ Template.main.onRendered(function () {
       align: 'center',
       fixedWidth: 167
     }).setStroke('#3a2519', 6));
-    wooden_header.add( main.add.sprite(220, 90, 'checkbox-round-brown' ) );
-    wooden_header.add( main.add.sprite(305, 90, 'square-brown-header' ) );
+    wooden_header.add( main.add.sprite(220, 90, 'checkbox-round-brown' ).setInteractive({ cursor: 'pointer' }) );
+    wooden_header.add( main.add.sprite(220, 90, 'check' ) );
+    wooden_header.add( main.add.text(182, 37, 'Owned', {
+      fontFamily: 'Roboto',
+      fontSize: 22,
+      color: '#ffffff',
+      align: 'center',
+      fixedWidth: 73
+    }).setStroke('#443024', 6));
+    wooden_header.add( main.add.sprite(305, 90, 'square-brown-header' ).setInteractive({ cursor: 'pointer' }) );
+    wooden_header.add( main.add.text(268, 37, 'Sort', {
+      fontFamily: 'Roboto',
+      fontSize: 22,
+      color: '#ffffff',
+      align: 'center',
+      fixedWidth: 73
+    }).setStroke('#443024', 6));
     wooden_header.add( main.add.sprite(305, 90, 'sort-icon' ) );
     bg_elements.push( wooden_header );
 
@@ -516,6 +576,12 @@ Template.main.onRendered(function () {
         }
       });
     };
+
+    town = true;
+    woodenDown();
+    woodHeaderDown()
+    stoneHeaderUp();
+    menu_icon.setTexture('exit-icon');
 
     menu_button.on('pointerdown', function () {
       if ( !town ) {
