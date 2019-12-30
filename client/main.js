@@ -50,6 +50,9 @@ Template.main.onRendered(function () {
   {
     let main = this;
     this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
+    this.load.image('white-square', 'assets/map/white-square.png');
+    this.load.image('sign', 'assets/map/sign.png');
+    this.load.image('gate', 'assets/map/gate.png');
     this.load.image('task-box', 'assets/accents/task-box.png');
     this.load.image('skill-circle', 'assets/accents/skill-circle.png');
     this.load.image('skill-circle-cover', 'assets/accents/skill-circle-cover.png');
@@ -114,13 +117,17 @@ Template.main.onRendered(function () {
     for ( let i = 1; 60 >= i; i++ ) {
       main.load.image('avatar-'+i, 'assets/avatars/avatar-'+i+'.png');
     }
+    for ( let i = 1; 11 >= i; i++ ) {
+      main.load.image('tree-trunk-'+i, 'assets/map/trees/tree-trunk-'+i+'.png');
+      main.load.image('tree-top-'+i, 'assets/map/trees/tree-top-'+i+'.png');
+    }
   }
 
   function create ()
   {
     let main = this;
     let tasks = [];
-    
+
     const task_box = { width: 676, height: 170 };
     const task_box_height = task_box.height+60;
     for ( let i = 0; 3 >= i; i++ ) {
@@ -298,6 +305,7 @@ Template.main.onRendered(function () {
     // wooden background
     let wooden = main.add.container(4, -800 );
     wooden.add( main.add.sprite(4, 0, 'wooden' ) );
+    /*
     let structure_x = 0;
     let structure_y = 0;
     for ( let i = 0; structures.length-1 >= i; i++ ) {
@@ -334,6 +342,7 @@ Template.main.onRendered(function () {
       if ( structure_x >= 3 )
       structure_x = 0;
     }
+    */
     bg_elements.push( wooden );
 
     // wooden header assets
@@ -598,6 +607,180 @@ Template.main.onRendered(function () {
         menu_icon.setTexture('menu-icon');
       };
     });
+    
+    // window.localStorage.removeItem('map');
+    window.localStorage.removeItem('trees');
+
+    let map_x = 0, map_y = 0;
+    let map_storage = window.localStorage.getItem('map');
+    if ( !map_storage ) {
+      let map_x = 0, map_y = 0, tiles = [];
+      for ( let i = 1; 120 >= i; i++ ) {
+        tiles.push({ x: map_x*289, y: map_y*288, tint:Math.floor(Math.random()*6) });
+        map_x++
+        if ( map_x == 14 ) {
+          map_x = 0;
+          map_y++
+        };
+      }
+      window.localStorage.setItem("map", JSON.stringify(tiles))
+    };
+
+    let tree_storage = window.localStorage.getItem('trees');
+    if ( !tree_storage ) {
+      let tree_data = [];
+      map_x = 0, map_y = 0;
+      for ( let i = 1; 260 >= i; i++ ) {
+        const tree_x = map_x*169-(Math.floor(Math.random()*20)+1);
+        const tree_y = map_y*188-(Math.floor(Math.random()*60)+1);
+        const make = Math.floor(Math.random()*100)+1;
+        const scale = (Math.floor(Math.random()*15)+30)/100;
+        if ( make == 1 ) {
+          tree_data.push({
+            city: true,
+            x: tree_x,
+            y: tree_y,
+          });
+        } else {
+          tree_data.push({
+            scale: scale,
+            x: tree_x,
+            y: tree_y,
+            tree: (Math.floor(Math.random()*11)+1),
+            tint: Math.floor(Math.random()*8)
+          });
+          if ( make > 1 )
+          tree_data.push({
+            scale: scale,
+            x: tree_x+(Math.floor(Math.random()*40)+40),
+            y: tree_y+(Math.floor(Math.random()*40)+40),
+            tree: (Math.floor(Math.random()*11)+1),
+            tint: Math.floor(Math.random()*8)
+          });
+        };
+        map_x++
+        if ( map_x == 24 ) {
+          map_x = 0;
+          map_y++
+        };
+      }
+      window.localStorage.setItem("trees", JSON.stringify(tree_data));
+    }
+    const map_scale = 0.5;
+    let map_tiles = JSON.parse(localStorage.getItem('map'));
+    if ( map_tiles )
+    for ( let i = 0; map_tiles.length-1 >= i; i++ ) {
+      const tint = ['0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
+      let map_tile = main.add.sprite(map_tiles[i].x*map_scale, map_tiles[i].y*map_scale, 'white-square' ).setScale(map_scale).setTint(tint[map_tiles[i].tint]);
+      map_tile.depth = 0;
+    }
+    let map_trees = JSON.parse(localStorage.getItem('trees'));
+    if ( map_trees )
+    for ( let i = 0; map_trees.length-1 >= i; i++ ) {
+      if ( map_trees[i].city ) {
+        let circle = main.add.graphics().fillStyle(0x000000, 1).fillCircle(map_trees[i].x*map_scale, map_trees[i].y*map_scale, 200).setAlpha(0.5);
+        circle.depth = 1;
+        let sign = main.add.sprite(map_trees[i].x*map_scale, map_trees[i].y*map_scale-92, 'sign' );
+        sign.depth = map_trees[i].y*map_scale+9;
+        let gate = main.add.sprite(map_trees[i].x*map_scale-7, map_trees[i].y*map_scale, 'gate' );
+        gate.depth = map_trees[i].y*map_scale+10;
+      } else {
+        const tint = ['0xaca52f', '0xd28d2c', '0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
+        let tree_trunk_s = main.add.sprite(map_trees[i].x*map_scale+2, map_trees[i].y*map_scale+155*map_trees[i].scale-1, 'tree-trunk-'+map_trees[i].tree ).setScale(map_trees[i].scale).setTint('0x111111').setAlpha(0.4);
+        let tree_top_s = main.add.sprite(map_trees[i].x*map_scale+2, map_trees[i].y*map_scale-1, 'tree-top-'+map_trees[i].tree ).setScale(map_trees[i].scale).setTint('0x111111').setAlpha(0.4);
+        let tree_trunk = main.add.sprite(map_trees[i].x*map_scale, map_trees[i].y*map_scale+155*map_trees[i].scale, 'tree-trunk-'+map_trees[i].tree ).setScale(map_trees[i].scale);
+        let tree_top = main.add.sprite(map_trees[i].x*map_scale, map_trees[i].y*map_scale, 'tree-top-'+map_trees[i].tree ).setScale(map_trees[i].scale).setTint(tint[map_trees[i].tint]);
+        tree_trunk_s.depth = map_trees[i].y*map_scale+5;
+        tree_top_s.depth = map_trees[i].y*map_scale+6;
+        tree_trunk.depth = map_trees[i].y*map_scale+7;
+        tree_top.depth = map_trees[i].y*map_scale+8;
+      };
+    }
+    /*
+    let map_x = 0, map_y = 0, tiles = [];
+    for ( let i = 1; 100 >= i; i++ ) {
+      tiles.push({ x: map_x, y: map_y, tint:Math.floor(Math.random()*6) });
+      map_x++
+      if ( map_x == 14 ) {
+        map_x = 0;
+        map_y++
+      };
+    }
+
+    let trees = [];
+    map_x = 0, map_y = 0;
+    for ( let i = 1; 100 >= i; i++ ) {
+      const make = Math.floor(Math.random()*100)+1;
+      if ( make > 5 ) {
+        trees.push({
+          scale: (Math.floor(Math.random()*15)+30)/100,
+          x: map_x*289-(Math.floor(Math.random()*120)-120),
+          y: map_y*288-(Math.floor(Math.random()*120)-60),
+          tree: (Math.floor(Math.random()*11)+1),
+          tint: Math.floor(Math.random()*8)
+        });
+      };
+      if ( make > 10 ) {
+        trees.push({
+          scale: (Math.floor(Math.random()*15)+30)/100,
+          x: map_x*289-(Math.floor(Math.random()*120)-120)+(Math.floor(Math.random()*75)+50),
+          y: map_y*288-(Math.floor(Math.random()*120)-60)+(Math.floor(Math.random()*75)+50),
+          tree: (Math.floor(Math.random()*11)+1),
+          tint: Math.floor(Math.random()*8)
+        });
+      };
+      map_x++
+      if ( map_x == 14 ) {
+        map_x = 0;
+        map_y++
+      };
+    }
+    */
+
+    /*
+    let map_x = 0, map_y = 0, map = main.add.container(0, 0);
+    const map_scale = 0.5;
+    for ( let i = 1; 100 >= i; i++ ) {
+      const tint = ['0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
+      const set_tint = tint[Math.floor(Math.random()*tint.length)];
+      map.add( main.add.sprite(map_x*289*map_scale, map_y*288*map_scale, 'white-square' ).setScale(map_scale).setTint(tint[Math.floor(Math.random()*tint.length)]) );
+      map_x++
+      if ( map_x == 14 ) {
+        map_x = 0;
+        map_y++
+      };
+    }
+
+    map_x = 0, map_y = 0
+    for ( let i = 1; 100 >= i; i++ ) {
+      const tint = ['0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
+      const tree_tint = ['0xaca52f', '0xd28d2c', '0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
+      const set_tint = tint[Math.floor(Math.random()*tint.length)];
+      const tree_scale = (Math.floor(Math.random()*15)+30)/100;
+      const tree_x = (Math.floor(Math.random()*120)-120)*map_scale;
+      const tree_y = (Math.floor(Math.random()*120)-60)*map_scale;
+      const map_x_full = map_x*289*map_scale-tree_x;
+      const map_y_full = map_y*288*map_scale-tree_y;
+      const tree = (Math.floor(Math.random()*11)+1);
+      const make_tree = Math.floor(Math.random()*100)+1;
+      if ( make_tree > 5 ) {
+        map.add( main.add.sprite(map_x_full, map_y_full+155*tree_scale, 'tree-trunk-'+tree ).setScale(tree_scale) );
+        map.add( main.add.sprite(map_x_full, map_y_full, 'tree-top-'+tree ).setScale(tree_scale).setTint(tree_tint[Math.floor(Math.random()*tree_tint.length)]) );
+      };
+      if ( make_tree > 10 ) {
+        const extra_tree_x = (Math.floor(Math.random()*75)+50)*map_scale;
+        const extra_tree_y = (Math.floor(Math.random()*75)+50)*map_scale;
+        const extra_tree = (Math.floor(Math.random()*11)+1);
+        map.add( main.add.sprite(map_x_full+extra_tree_x, map_y_full+155*tree_scale+extra_tree_y, 'tree-trunk-'+extra_tree ).setScale(tree_scale) );
+        map.add( main.add.sprite(map_x_full+extra_tree_x, map_y_full+extra_tree_y, 'tree-top-'+extra_tree ).setScale(tree_scale).setTint(tree_tint[Math.floor(Math.random()*tree_tint.length)]) );
+      };
+      map_x++
+      if ( map_x == 14 ) {
+        map_x = 0;
+        map_y++
+      };
+    }
+    */
 
     /*
     // Full Progress Phaser.Math.DegToRad(130), Phaser.Math.DegToRad(410)
