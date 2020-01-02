@@ -8,6 +8,7 @@ import './main.html';
 import './deps.js';
 import './routing.js';
 import './login.js';
+import '../imports/globals.js';
 
 UI.body.onRendered(function() {
 	Tracker.autorun(function() {
@@ -53,6 +54,7 @@ Template.main.onRendered(function () {
     this.load.image('white-square', 'assets/map/white-square.png');
     this.load.image('sign', 'assets/map/sign.png');
     this.load.image('gate', 'assets/map/gate.png');
+    this.load.image('stand', 'assets/map/stand.png');
     this.load.image('task-box', 'assets/accents/task-box.png');
     this.load.image('skill-circle', 'assets/accents/skill-circle.png');
     this.load.image('skill-circle-cover', 'assets/accents/skill-circle-cover.png');
@@ -137,7 +139,7 @@ Template.main.onRendered(function () {
       task_boxes.push( main.add.sprite(40, 62, 'skill-circle' ).setInteractive({ cursor: 'pointer' }) );
       let skill_bar = main.add.graphics();
       task_boxes.push( skill_bar );
-      let delay = (Math.floor(Math.random()*50)+1)*100;
+      let delay = randInt(1, 50)*100;
       main.tweens.addCounter({
         delay: delay,
         from: 0,
@@ -305,7 +307,7 @@ Template.main.onRendered(function () {
     // wooden background
     let wooden = main.add.container(4, -800 );
     wooden.add( main.add.sprite(4, 0, 'wooden' ) );
-    /*
+    
     let structure_x = 0;
     let structure_y = 0;
     for ( let i = 0; structures.length-1 >= i; i++ ) {
@@ -342,7 +344,7 @@ Template.main.onRendered(function () {
       if ( structure_x >= 3 )
       structure_x = 0;
     }
-    */
+    
     bg_elements.push( wooden );
 
     // wooden header assets
@@ -586,12 +588,6 @@ Template.main.onRendered(function () {
       });
     };
 
-    town = true;
-    woodenDown();
-    woodHeaderDown()
-    stoneHeaderUp();
-    menu_icon.setTexture('exit-icon');
-
     menu_button.on('pointerdown', function () {
       if ( !town ) {
         town = true;
@@ -608,179 +604,214 @@ Template.main.onRendered(function () {
       };
     });
     
-    // window.localStorage.removeItem('map');
-    window.localStorage.removeItem('trees');
+    window.localStorage.removeItem('layer1');
+    window.localStorage.removeItem('layer2');
+    window.localStorage.removeItem('layer3');
 
-    let map_x = 0, map_y = 0;
-    let map_storage = window.localStorage.getItem('map');
-    if ( !map_storage ) {
-      let map_x = 0, map_y = 0, tiles = [];
-      for ( let i = 1; 120 >= i; i++ ) {
-        tiles.push({ x: map_x*289, y: map_y*288, tint:Math.floor(Math.random()*6) });
-        map_x++
-        if ( map_x == 14 ) {
-          map_x = 0;
-          map_y++
-        };
-      }
-      window.localStorage.setItem("map", JSON.stringify(tiles))
-    };
+    const map_scale = 0.5,
+    mapWidth = 8092,
+    mapHeight = 4032;
 
-    let tree_storage = window.localStorage.getItem('trees');
-    if ( !tree_storage ) {
-      let tree_data = [];
+    let map_x = 0, map_y = 0,
+    map_data = [], tiles = [], towns = [], objects = [],
+    tile_storage = window.localStorage.getItem('layer1'),
+    town_storage = window.localStorage.getItem('layer2');
+    object_storage = window.localStorage.getItem('layer3');
+    
+    if ( !tile_storage ) {
       map_x = 0, map_y = 0;
-      for ( let i = 1; 260 >= i; i++ ) {
-        const tree_x = map_x*169-(Math.floor(Math.random()*20)+1);
-        const tree_y = map_y*188-(Math.floor(Math.random()*60)+1);
-        const make = Math.floor(Math.random()*100)+1;
-        const scale = (Math.floor(Math.random()*15)+30)/100;
-        if ( make == 1 ) {
-          tree_data.push({
-            city: true,
-            x: tree_x,
-            y: tree_y,
-          });
-        } else {
-          tree_data.push({
-            scale: scale,
-            x: tree_x,
-            y: tree_y,
-            tree: (Math.floor(Math.random()*11)+1),
-            tint: Math.floor(Math.random()*8)
-          });
-          if ( make > 1 )
-          tree_data.push({
-            scale: scale,
-            x: tree_x+(Math.floor(Math.random()*40)+40),
-            y: tree_y+(Math.floor(Math.random()*40)+40),
-            tree: (Math.floor(Math.random()*11)+1),
-            tint: Math.floor(Math.random()*8)
-          });
-        };
+      for ( let i = 1; 392 >= i; i++ ) {
+        tiles.push({ x: map_x*289, y: map_y*288, tint:randInt(0, 5) });
         map_x++
-        if ( map_x == 24 ) {
+        if ( map_x == 28 ) {
           map_x = 0;
           map_y++
         };
       }
-      window.localStorage.setItem("trees", JSON.stringify(tree_data));
+      window.localStorage.setItem("layer1", JSON.stringify(tiles));
+    };
+    if ( !town_storage ) {
+      map_x = 0, map_y = 0;
+      for ( let i = 1; 15 >= i; i++ ) {
+        const x = map_x*1512+randInt(300, 1200);
+        const y = map_y*1202+randInt(300, 900);
+        // const make = randInt(1, 100);
+        // if ( make > 33 )
+        towns.push({ x: x, y: y });
+        map_x++
+        if ( map_x == 5 ) {
+          map_x = 0;
+          map_y++
+        };
+      }
+      window.localStorage.setItem("layer2", JSON.stringify(towns));
+    };
+    if ( !object_storage ) {
+      map_x = 0, map_y = 0;
+      for ( let i = 1; 784 >= i; i++ ) {
+        const tree_x = map_x*145;
+        const tree_y = map_y*288;
+        let create = true;
+        for ( let j = 0; towns.length-1 >= j; j++ ) {
+          if ( tree_x > towns[j].x-300 && tree_x < towns[j].x+300 && tree_y > towns[j].y-300 && tree_y < towns[j].y+300 )
+          create = false;
+        }
+        const scale = randInt(30, 45)/100;
+        const offset = ( map_y % 2 ? 0 : 60 );
+        const make = randInt(1, 100);
+        const reduce = ( map_y == 0 ? -120 : 0 );
+        const tree_1_x = tree_x+offset;
+        const tree_1_y = tree_y-randInt(61+reduce/2, 180+reduce);
+        if ( create ) {
+          if ( make > 5 )
+          objects.push({
+            scale: scale,
+            x: tree_1_x,
+            y: tree_1_y,
+            tree: randInt(1, 11),
+            tint: randInt(0, 7)
+          });
+          const tree_2_x = tree_x+offset+randInt(40, 60);
+          const tree_2_y = tree_y-randInt(20, 60);
+          if ( make > 50 && map_y > 0 )
+          objects.push({
+            scale: scale,
+            x: tree_2_x,
+            y: tree_2_y,
+            tree: randInt(1, 11),
+            tint: randInt(0, 7)
+          });
+        };
+        map_x++
+        if ( map_x == 56 ) {
+          map_x = 0;
+          map_y++
+        };
+      }
+      window.localStorage.setItem("layer3", JSON.stringify(objects));
     }
-    const map_scale = 0.5;
-    let map_tiles = JSON.parse(localStorage.getItem('map'));
+
+    function cloneItems(objects, tint, tree, scale) {
+      let clones = [];
+      const outer = ( !tint ? 2 : 1.25 ),
+      winTop = window.innerHeight*outer,
+      winBottom = mapHeight-window.innerHeight*outer,
+      winLeft = window.innerWidth*outer,
+      winRight = mapWidth-window.innerWidth*outer;
+      for ( let i = 0; objects.length-1 >= i; i++ ) {
+        const x = objects[i].x,
+        y = objects[i].y,
+        set_tint = ( !tint ? false : objects[i].tint ),
+        set_tree = ( !tree ? false : objects[i].tree ),
+        set_scale = ( !scale ? 1 : objects[i].scale );
+        if ( y <= winTop )
+        clones.push({ x: x, y: y+mapHeight, tint: set_tint, tree: set_tree, scale: set_scale });
+        if ( y >= winBottom )
+        clones.push({ x: x, y: y-mapHeight, tint: set_tint, tree: set_tree, scale: set_scale });
+        if ( x <= winLeft )
+        clones.push({ x: x+mapWidth, y: y, tint: set_tint, tree: set_tree, scale: set_scale });
+        if ( x >= winRight )
+        clones.push({ x: x-mapWidth, y: y, tint: set_tint, tree: set_tree, scale: set_scale });
+        if ( y <= winTop && x <= winLeft )
+        clones.push({ x: x+mapWidth, y: y+mapHeight, tint: set_tint, tree: set_tree, scale: set_scale });
+        if ( y <= winTop && x >= winRight )
+        clones.push({ x: x-mapWidth, y: y+mapHeight, tint: set_tint, tree: set_tree, scale: set_scale });
+        if ( y >= winBottom && x <= winLeft )
+        clones.push({ x: x+mapWidth, y: y-mapHeight, tint: set_tint, tree: set_tree, scale: set_scale });
+        if ( y >= winBottom && x >= winRight )
+        clones.push({ x: x-mapWidth, y: y-mapHeight, tint: set_tint, tree: set_tree, scale: set_scale });
+      }
+      return clones;
+    }
+
+    function tilePlacer(tiles) {
+      for ( let i = 0; tiles.length-1 >= i; i++ ) {
+        const tint = ['0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
+        map_data.push( main.add.sprite(tiles[i].x*map_scale, tiles[i].y*map_scale, 'white-square' ).setScale(map_scale).setTint(tint[tiles[i].tint]).setDepth(0) );
+      }
+    }
+
+    function townPlacer(towns) {
+      for ( let i = 0; towns.length-1 >= i; i++ ) {
+        const x = towns[i].x*map_scale,
+        y = towns[i].y*map_scale;
+        map_data.push( main.add.graphics().fillStyle(0x000000, 1).fillCircle(x, y, 150).setAlpha(0.5).setDepth(1) );
+      }
+    }
+
+    function objectPlacer(object) {
+      for ( let i = 0; object.length-1 >= i; i++ ) {
+        const x = object[i].x*map_scale,
+        y = object[i].y*map_scale,
+        tree = object[i].tree,
+        scale = object[i].scale;
+        if ( !tree ) {
+          map_data.push( main.add.sprite(x+20, y-32, 'sign' ).setDepth(y+5) );
+          map_data.push( main.add.text(x-58, y-92, 'Robertown'.toUpperCase(), {
+            fontFamily: 'Roboto',
+            fontSize: 20,
+            fontStyle: 'bold',
+            color: '#ffffff',
+            align: 'center',
+            fixedWidth: 152
+          }).setStroke('#5e3b1a', 4).setDepth(y+6) );
+          map_data.push( main.add.sprite(x-40, y+61, 'stand' ).setDepth(y+7) );
+          map_data.push( main.add.sprite(x-45, y+12, 'gate' ).setDepth(y+8) );
+        } else {
+          const tint = ['0xaca52f', '0xd28d2c', '0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
+          map_data.push( main.add.sprite(x+2, y+155*scale-1, 'tree-trunk-'+tree ).setScale(scale).setTint('0x111111').setAlpha(0.3).setDepth(y+9) );
+          map_data.push( main.add.sprite(x+2, y-1, 'tree-top-'+tree ).setScale(scale).setTint('0x111111').setAlpha(0.3).setDepth(y+10) );
+          map_data.push( main.add.sprite(x, y+155*scale, 'tree-trunk-'+tree ).setScale(scale).setDepth(y+11) );
+          map_data.push( main.add.sprite(x, y, 'tree-top-'+tree ).setScale(scale).setTint(tint[object[i].tint]).setDepth(y+12) );
+        };
+      }
+    }
+
+    let map_tiles = JSON.parse(localStorage.getItem('layer1')),
+    clone_tiles = cloneItems(map_tiles, true),
+    map_towns = JSON.parse(localStorage.getItem('layer2')),
+    clone_towns = cloneItems(map_towns),
+    map_objects = JSON.parse(localStorage.getItem('layer3')),
+    clone_objects = cloneItems(map_objects, true, true, true);
+    
+    // combine towns with clones in objects
+    for ( let i = 0; map_towns.length-1 >= i; i++ ) {
+      map_objects.push(map_towns[i]);
+    }
+    for ( let i = 0; clone_towns.length-1 >= i; i++ ) {
+      map_objects.push(clone_towns[i]);
+    }
+    map_objects.sort((a, b) => (a.y > b.y) ? 1 : (a.y === b.y) ? ((a.x > b.x) ? 1 : -1) : -1 );
+
     if ( map_tiles )
-    for ( let i = 0; map_tiles.length-1 >= i; i++ ) {
-      const tint = ['0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
-      let map_tile = main.add.sprite(map_tiles[i].x*map_scale, map_tiles[i].y*map_scale, 'white-square' ).setScale(map_scale).setTint(tint[map_tiles[i].tint]);
-      map_tile.depth = 0;
-    }
-    let map_trees = JSON.parse(localStorage.getItem('trees'));
-    if ( map_trees )
-    for ( let i = 0; map_trees.length-1 >= i; i++ ) {
-      if ( map_trees[i].city ) {
-        let circle = main.add.graphics().fillStyle(0x000000, 1).fillCircle(map_trees[i].x*map_scale, map_trees[i].y*map_scale, 200).setAlpha(0.5);
-        circle.depth = 1;
-        let sign = main.add.sprite(map_trees[i].x*map_scale, map_trees[i].y*map_scale-92, 'sign' );
-        sign.depth = map_trees[i].y*map_scale+9;
-        let gate = main.add.sprite(map_trees[i].x*map_scale-7, map_trees[i].y*map_scale, 'gate' );
-        gate.depth = map_trees[i].y*map_scale+10;
+    tilePlacer(map_tiles)
+    if ( clone_tiles )
+    tilePlacer(clone_tiles)
+    
+    if ( map_towns )
+    townPlacer(map_towns)
+    if ( clone_towns )
+    townPlacer(clone_towns)
+
+    if ( map_objects )
+    objectPlacer(map_objects)
+    if ( clone_objects )
+    objectPlacer(clone_objects)
+
+    let map = main.add.container(0, 0, map_data ).setSize(19000,19000).setInteractive(),
+    moving;
+
+    map.on('pointerdown', function (e) {
+      if ( e.button != 2 ) {
+        const start = { x: window.innerWidth/2, y: window.innerHeight/2 };
+        const end = { x: main.input.activePointer.worldX, y: main.input.activePointer.worldY };
+        const angle = Math.atan2(end.y - start.y, end.x - start.x);
+        const angleDeg = Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI;
+        moving = angle;
       } else {
-        const tint = ['0xaca52f', '0xd28d2c', '0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
-        let tree_trunk_s = main.add.sprite(map_trees[i].x*map_scale+2, map_trees[i].y*map_scale+155*map_trees[i].scale-1, 'tree-trunk-'+map_trees[i].tree ).setScale(map_trees[i].scale).setTint('0x111111').setAlpha(0.4);
-        let tree_top_s = main.add.sprite(map_trees[i].x*map_scale+2, map_trees[i].y*map_scale-1, 'tree-top-'+map_trees[i].tree ).setScale(map_trees[i].scale).setTint('0x111111').setAlpha(0.4);
-        let tree_trunk = main.add.sprite(map_trees[i].x*map_scale, map_trees[i].y*map_scale+155*map_trees[i].scale, 'tree-trunk-'+map_trees[i].tree ).setScale(map_trees[i].scale);
-        let tree_top = main.add.sprite(map_trees[i].x*map_scale, map_trees[i].y*map_scale, 'tree-top-'+map_trees[i].tree ).setScale(map_trees[i].scale).setTint(tint[map_trees[i].tint]);
-        tree_trunk_s.depth = map_trees[i].y*map_scale+5;
-        tree_top_s.depth = map_trees[i].y*map_scale+6;
-        tree_trunk.depth = map_trees[i].y*map_scale+7;
-        tree_top.depth = map_trees[i].y*map_scale+8;
+        moving = false;
       };
-    }
-    /*
-    let map_x = 0, map_y = 0, tiles = [];
-    for ( let i = 1; 100 >= i; i++ ) {
-      tiles.push({ x: map_x, y: map_y, tint:Math.floor(Math.random()*6) });
-      map_x++
-      if ( map_x == 14 ) {
-        map_x = 0;
-        map_y++
-      };
-    }
-
-    let trees = [];
-    map_x = 0, map_y = 0;
-    for ( let i = 1; 100 >= i; i++ ) {
-      const make = Math.floor(Math.random()*100)+1;
-      if ( make > 5 ) {
-        trees.push({
-          scale: (Math.floor(Math.random()*15)+30)/100,
-          x: map_x*289-(Math.floor(Math.random()*120)-120),
-          y: map_y*288-(Math.floor(Math.random()*120)-60),
-          tree: (Math.floor(Math.random()*11)+1),
-          tint: Math.floor(Math.random()*8)
-        });
-      };
-      if ( make > 10 ) {
-        trees.push({
-          scale: (Math.floor(Math.random()*15)+30)/100,
-          x: map_x*289-(Math.floor(Math.random()*120)-120)+(Math.floor(Math.random()*75)+50),
-          y: map_y*288-(Math.floor(Math.random()*120)-60)+(Math.floor(Math.random()*75)+50),
-          tree: (Math.floor(Math.random()*11)+1),
-          tint: Math.floor(Math.random()*8)
-        });
-      };
-      map_x++
-      if ( map_x == 14 ) {
-        map_x = 0;
-        map_y++
-      };
-    }
-    */
-
-    /*
-    let map_x = 0, map_y = 0, map = main.add.container(0, 0);
-    const map_scale = 0.5;
-    for ( let i = 1; 100 >= i; i++ ) {
-      const tint = ['0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
-      const set_tint = tint[Math.floor(Math.random()*tint.length)];
-      map.add( main.add.sprite(map_x*289*map_scale, map_y*288*map_scale, 'white-square' ).setScale(map_scale).setTint(tint[Math.floor(Math.random()*tint.length)]) );
-      map_x++
-      if ( map_x == 14 ) {
-        map_x = 0;
-        map_y++
-      };
-    }
-
-    map_x = 0, map_y = 0
-    for ( let i = 1; 100 >= i; i++ ) {
-      const tint = ['0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
-      const tree_tint = ['0xaca52f', '0xd28d2c', '0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
-      const set_tint = tint[Math.floor(Math.random()*tint.length)];
-      const tree_scale = (Math.floor(Math.random()*15)+30)/100;
-      const tree_x = (Math.floor(Math.random()*120)-120)*map_scale;
-      const tree_y = (Math.floor(Math.random()*120)-60)*map_scale;
-      const map_x_full = map_x*289*map_scale-tree_x;
-      const map_y_full = map_y*288*map_scale-tree_y;
-      const tree = (Math.floor(Math.random()*11)+1);
-      const make_tree = Math.floor(Math.random()*100)+1;
-      if ( make_tree > 5 ) {
-        map.add( main.add.sprite(map_x_full, map_y_full+155*tree_scale, 'tree-trunk-'+tree ).setScale(tree_scale) );
-        map.add( main.add.sprite(map_x_full, map_y_full, 'tree-top-'+tree ).setScale(tree_scale).setTint(tree_tint[Math.floor(Math.random()*tree_tint.length)]) );
-      };
-      if ( make_tree > 10 ) {
-        const extra_tree_x = (Math.floor(Math.random()*75)+50)*map_scale;
-        const extra_tree_y = (Math.floor(Math.random()*75)+50)*map_scale;
-        const extra_tree = (Math.floor(Math.random()*11)+1);
-        map.add( main.add.sprite(map_x_full+extra_tree_x, map_y_full+155*tree_scale+extra_tree_y, 'tree-trunk-'+extra_tree ).setScale(tree_scale) );
-        map.add( main.add.sprite(map_x_full+extra_tree_x, map_y_full+extra_tree_y, 'tree-top-'+extra_tree ).setScale(tree_scale).setTint(tree_tint[Math.floor(Math.random()*tree_tint.length)]) );
-      };
-      map_x++
-      if ( map_x == 14 ) {
-        map_x = 0;
-        map_y++
-      };
-    }
-    */
+    });
 
     /*
     // Full Progress Phaser.Math.DegToRad(130), Phaser.Math.DegToRad(410)
@@ -804,6 +835,19 @@ Template.main.onRendered(function () {
     */
 
     function step() {
+      if ( moving ) {
+        map.x -= Math.cos(moving)*2;
+        map.y -= Math.sin(moving)*2;
+        // console.log(map.x+" "+map.y);
+        if ( map.x > window.innerWidth/2 )
+        map.x = -mapWidth*map_scale+window.innerWidth/2;
+        if ( map.y > window.innerHeight/2 )
+        map.y = -mapHeight*map_scale+window.innerHeight/2;
+        if ( map.x < -mapWidth*map_scale+window.innerWidth/2  )
+        map.x = 0+window.innerWidth/2;
+        if ( map.y < -mapHeight*map_scale+window.innerHeight/2  )
+        map.y = 0+window.innerHeight/2;
+      };
       let slow = 0.9;
       if ( !dragging && velocity && container.y-velocity <= top && container.y-velocity >= contHeight ) {
         container.y -= velocity;
