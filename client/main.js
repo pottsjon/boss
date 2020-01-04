@@ -813,7 +813,6 @@ Template.main.onRendered(function () {
       };
     });
 
-    /*
     // Full Progress Phaser.Math.DegToRad(130), Phaser.Math.DegToRad(410)
     main.tweens.addCounter({
       from: 0,
@@ -832,7 +831,6 @@ Template.main.onRendered(function () {
           skill_bar.strokePath();
       }
     });
-    */
 
     function step() {
       if ( moving ) {
