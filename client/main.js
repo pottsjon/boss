@@ -59,8 +59,11 @@ Template.main.onRendered(function () {
   {
     main = this;
     main.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
+
+    // load logo
     main.add.image(window.innerWidth/2, window.innerHeight/2-100, 'logo').setScale(.75);
 
+    // load progress bar for assets
     main.add.graphics().fillStyle(0x0b2128, 1).fillRect(window.innerWidth/2-200, window.innerHeight/2+100, 400+4, 44);
     let progress = main.add.graphics();
     main.load.on('progress', function (value) {
@@ -71,7 +74,9 @@ Template.main.onRendered(function () {
     main.load.on('complete', function () {
         progress.destroy();
     });
+    // map assets
     loadAssets('map');
+    // town assets
     loadAssets('town');
   }
 
@@ -154,23 +159,42 @@ Template.main.onRendered(function () {
     const prep_scale = ( window.innerWidth < container_width ? window.innerWidth/container_width : 1 );
     const scale = ( window.innerWidth >= 500 ? 500/container_width : prep_scale );
     main.add.container(window.innerWidth/2, 0, topper ).setScale(scale,scale);
+
+    let posx = 0, posy = -mapHeight*map_scale,
+    start, end, angle, angleDeg;
+    main.input.on('pointerdown', function (e) {
+      if ( e.button != 2 ) {
+        start = { x: -posx+window.innerWidth/2, y: -posy+window.innerHeight/2 },
+        end = { x: main.input.activePointer.worldX, y: main.input.activePointer.worldY },
+        angle = Math.atan2(end.y - start.y, end.x - start.x),
+        angleDeg = Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI;
+        moving = angle;
+      } else {
+        moving = false;
+      };
+    });
     
     woodenDown();
     //stoneHeader(0);
-
     function step() {
       if ( moving ) {
-        map.x -= Math.cos(moving)*.2;
-        map.y -= Math.sin(moving)*.2;
-        // console.log(map.x+" "+map.y);
-        if ( map.x > window.innerWidth/2 )
-        map.x = -mapWidth*map_scale+window.innerWidth/2;
-        if ( map.y > window.innerHeight/2 )
-        map.y = -mapHeight*map_scale+window.innerHeight/2;
-        if ( map.x < -mapWidth*map_scale+window.innerWidth/2  )
-        map.x = 0+window.innerWidth/2;
-        if ( map.y < -mapHeight*map_scale+window.innerHeight/2  )
-        map.y = 0+window.innerHeight/2;
+        posx -= Math.cos(moving)*.2;
+        posy -= Math.sin(moving)*.2;
+        // pointer.update(posx, posy);      
+        pointer.setDepth(((-posy+20+window.innerHeight/2)));
+        pointer.x = -posx+window.innerWidth/2;
+        pointer.y = -posy+window.innerHeight/2;
+        main.cameras.main.scrollX = -posx;
+        main.cameras.main.scrollY = -posy;
+        // console.log(posx+" "+posy);
+        if ( posx > window.innerWidth/2 )
+        posx = -mapWidth*map_scale+window.innerWidth/2;
+        if ( posy > -mapHeight*map_scale+window.innerHeight/2 )
+        posy = -mapHeight*map_scale+-mapHeight*map_scale+window.innerHeight/2;
+        if ( posx < -mapWidth*map_scale+window.innerWidth/2  )
+        posx = window.innerWidth/2;
+        if ( posy < -mapHeight*map_scale+-mapHeight*map_scale+window.innerHeight/2  )
+        posy = -mapHeight*map_scale+window.innerHeight/2;
       };
       let slow = 0.9;
       if ( !dragging && velocity && container.y-velocity <= top && container.y-velocity >= contHeight ) {
@@ -188,6 +212,8 @@ Template.main.onRendered(function () {
       requestAnimationFrame( step );
     };
     step();
+    main.cameras.main.setSize(mapWidth*map_scale, mapHeight*map_scale);
+    main.cameras.main.scrollY = mapHeight*map_scale;
   }
   });
 });
