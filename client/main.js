@@ -178,10 +178,14 @@ Template.main.onRendered(function () {
     //stoneHeader(0);
     function step() {
       if ( moving ) {
-        posx -= Math.cos(moving)*.2;
-        posy -= Math.sin(moving)*.2;
-        // pointer.update(posx, posy);      
+        posx -= Math.cos(moving)*.6;
+        posy -= Math.sin(moving)*.6;
+        p_avatar.setDepth(((-posy+20+window.innerHeight/2)+1));
         pointer.setDepth(((-posy+20+window.innerHeight/2)));
+        p_avatar.x = -posx+window.innerWidth/2-1;
+        p_avatar.y = -posy+window.innerHeight/2-26;
+        p_shape.x = -posx+window.innerWidth/2;
+        p_shape.y = -posy+window.innerHeight/2-26;
         pointer.x = -posx+window.innerWidth/2;
         pointer.y = -posy+window.innerHeight/2;
         main.cameras.main.scrollX = -posx;

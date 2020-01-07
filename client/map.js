@@ -87,16 +87,16 @@ buildMap = function() {
   if ( clone_objects )
   objectPlacer(clone_objects)
 
-  // pointer = main.add.existing(new Pointer(main, window.innerWidth/2, mapHeight*map_scale+window.innerHeight/2));
-
   let pointer_data = [];
-  pointer_data.push( main.add.sprite(1, 28, 'pointer' ) );
-  let shape = main.add.graphics().fillStyle(0x000000, 1).beginPath().fillEllipse(0, 0, 100, 100, 6).setDepth(100000).setAngle(30);
-  pointer_data.push(shape);
-  let mask = shape.createGeometryMask();
-  pointer_data.push( main.add.sprite(0, 0, 'avatar-1' ).setDisplaySize(100,100).setMask(mask) );
-  pointer = main.add.container(window.innerWidth/2-1, mapHeight*map_scale+window.innerHeight/2-28, pointer_data )
-  pointer.setDepth(mapHeight*map_scale+window.innerHeight/2);
+  const px = window.innerWidth/2,
+  py = mapHeight*map_scale+window.innerHeight/2;
+  pointer = main.add.sprite(px, py, 'pointer' );
+  p_shape = main.add.sprite(px, py-26, 'pointer-mask' );
+  p_avatar = main.add.sprite(px-1, py-26, 'avatar-1' ).setDisplaySize(100,100);
+  const p_mask = p_shape.createBitmapMask();
+  p_avatar.setMask(p_mask);
+  pointer.setDepth(py);
+  p_avatar.setDepth(py+1);
 
   /*
   main.add.graphics().lineStyle(2, 0x13270f).beginPath().strokeRect(window.innerWidth/2-215, 0, 430, window.innerHeight);
@@ -104,8 +104,6 @@ buildMap = function() {
   let mask = shape.createGeometryMask();
   map = main.add.container(0, 0, map_data ).setSize(19000,19000).setInteractive().setMask(mask);
   */
-  
-  // pointer = main.add.sprite(window.innerWidth/2, window.innerHeight/2, 'pointer' );
   
   /*
   map.on('pointerdown', function (e) {
@@ -233,7 +231,7 @@ buildMap = function() {
     };
     if ( !object_storage ) {
       map_x = 0, map_y = 0;
-      let town_gap = 270;
+      let town_gap = 300;
       for ( let i = 1; 784 >= i; i++ ) {
         let create = true;
         const tree_x = map_x*145,
@@ -246,7 +244,7 @@ buildMap = function() {
         tree_2_x = tree_x+offset+randInt(40, 60),
         tree_2_y = tree_y-randInt(20, 100);
         for ( let j = 0; towns.length-1 >= j; j++ ) {
-          if ( tree_x > towns[j].x-town_gap-50 && tree_x < towns[j].x+town_gap-50 && tree_y > towns[j].y-town_gap+20 && tree_y < towns[j].y+town_gap+20 )
+          if ( tree_x > towns[j].x-town_gap-50 && tree_x < towns[j].x+town_gap-50 && tree_y > towns[j].y-town_gap && tree_y < towns[j].y+town_gap )
           create = false;
         }
         if ( create ) {
