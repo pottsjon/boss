@@ -17,7 +17,6 @@ buildMap = function() {
       this.y = -y+window.innerHeight/2;
     }
   });
-  */
 
   let treeTrunk = new Phaser.Class({
     Extends: Phaser.GameObjects.Image,
@@ -26,8 +25,6 @@ buildMap = function() {
       Phaser.GameObjects.Image.call(this, scene, x, y+155*scale, 'tree-trunk-'+tree); 
       this.setScale(scale);
       this.setDepth(y+1);
-    },
-    update: function () {
     }
   });
 
@@ -35,19 +32,14 @@ buildMap = function() {
     Extends: Phaser.GameObjects.Image,
     initialize:
     function treeTop (scene, x, y, tint, scale, tree) {
-      /*
-      Phaser.GameObjects.Image.call(this, scene, x+2, y+155*scale-1, 'tree-trunk-'+tree).setScale(scale).setTint('0x111111').setAlpha(0.3);
-      Phaser.GameObjects.Image.call(this, scene, x+2, y-1, 'tree-top-'+tree).setScale(scale).setTint('0x111111').setAlpha(0.3);
-      */       
       const tints = ['0xaca52f', '0xd28d2c', '0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
       Phaser.GameObjects.Image.call(this, scene, x, y, 'tree-top-'+tree);
       this.setScale(scale);
       this.setTint(tints[tint]);
       this.setDepth(y+2);
-    },
-    update: function () {
     }
   });
+  */
 
   let map_data = [], trees = [], objects = [], towns = [], tiles = [],
   tile_storage = window.localStorage.getItem('layer1'),
@@ -95,8 +87,8 @@ buildMap = function() {
   p_avatar = main.add.sprite(px-1, py-26, 'avatar-1' ).setDisplaySize(100,100);
   const p_mask = p_shape.createBitmapMask();
   p_avatar.setMask(p_mask);
-  pointer.setDepth(py);
-  p_avatar.setDepth(py+1);
+  p_avatar.setDepth(py+81);
+  pointer.setDepth(py+80);
 
   /*
   main.add.graphics().lineStyle(2, 0x13270f).beginPath().strokeRect(window.innerWidth/2-215, 0, 430, window.innerHeight);
@@ -186,15 +178,15 @@ buildMap = function() {
         main.add.sprite(x-40, y+61, 'stand' );
         main.add.sprite(x-45, y+12, 'gate' );
       } else {
+        /*
         main.add.existing(new treeTrunk(main, x, y, scale, tree));
         main.add.existing(new treeTop(main, x, y, object[i].tint, scale, tree));
-        /*
-        const tint = ['0xaca52f', '0xd28d2c', '0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
-        map_data.push( main.add.sprite(x+2, y+155*scale-1, 'tree-trunk-'+tree ).setScale(scale).setTint('0x111111').setAlpha(0.3) );
-        map_data.push( main.add.sprite(x+2, y-1, 'tree-top-'+tree ).setScale(scale).setTint('0x111111').setAlpha(0.3) );
-        map_data.push( main.add.sprite(x, y+155*scale, 'tree-trunk-'+tree ).setScale(scale) );
-        map_data.push( main.add.sprite(x, y, 'tree-top-'+tree ).setScale(scale).setTint(tint[object[i].tint]) );
         */
+        const tint = ['0xaca52f', '0xd28d2c', '0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
+        main.add.sprite(x+2, y, 'tree-trunk-'+tree ).setScale(scale).setTint('0x000000').setAlpha(0.4).setDepth(y);
+        main.add.sprite(x+2, y-155*scale, 'tree-top-'+tree ).setScale(scale).setTint('0x000000').setAlpha(0.4).setDepth(y+1);
+        main.add.sprite(x, y, 'tree-trunk-'+tree ).setScale(scale).setDepth(y);
+        main.add.sprite(x, y-155*scale, 'tree-top-'+tree ).setScale(scale).setTint(tint[object[i].tint]).setDepth(y+1);
       };
     }
   }
@@ -244,7 +236,7 @@ buildMap = function() {
         tree_2_x = tree_x+offset+randInt(40, 60),
         tree_2_y = tree_y-randInt(20, 100);
         for ( let j = 0; towns.length-1 >= j; j++ ) {
-          if ( tree_x > towns[j].x-town_gap-50 && tree_x < towns[j].x+town_gap-50 && tree_y > towns[j].y-town_gap && tree_y < towns[j].y+town_gap )
+          if ( tree_x > towns[j].x-town_gap-50 && tree_x < towns[j].x+town_gap-50 && tree_y > towns[j].y-town_gap+150 && tree_y < towns[j].y+town_gap+150 )
           create = false;
         }
         if ( create ) {

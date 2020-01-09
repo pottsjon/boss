@@ -7,6 +7,7 @@ loadAssets = function(type) {
       main.load.image('stand', 'assets/map/stand.png');
       main.load.image('pointer', 'assets/map/pointer.png');
       main.load.image('pointer-mask', 'assets/map/pointer-mask.png');
+      main.load.image('arrow', 'assets/map/arrow.png');
 
       // trees 1-11
       for ( let i = 1; 11 >= i; i++ ) {

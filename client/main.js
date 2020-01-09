@@ -173,32 +173,72 @@ Template.main.onRendered(function () {
         moving = false;
       };
     });
+
+    let arrow, over, over_count;
+    main.input.on('pointermove', function (e) {
+      over = 5;
+      if ( !arrow )
+      arrow = main.add.sprite(-posx+window.innerWidth/2, -posy+window.innerHeight/2+80, 'arrow' ).setTint('0x62c466').setAlpha(0.5).setDepth(2).setOrigin(0, 0.5);
+      start = { x: -posx+window.innerWidth/2, y: -posy+window.innerHeight/2+80 },
+      end = { x: main.input.activePointer.worldX, y: main.input.activePointer.worldY },
+      angle = Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI;
+      arrow.setAngle(angle);
+    });
     
+    function overCount() {
+      const timer = ( over == 5 ? 2000 : 100 );
+      over_count = true;
+      Meteor.setTimeout(function(){
+        arrow.setAlpha(over/10);
+        over -= 1;
+        if ( over > 0 ) {
+          overCount()
+        } else {
+          over_count = false;
+          arrow.destroy();
+          arrow = false;
+        };
+      }, timer);
+    }
+
     woodenDown();
     //stoneHeader(0);
     function step() {
+      console.log(over)
+      if ( over && !over_count )
+      overCount();
       if ( moving ) {
         posx -= Math.cos(moving)*.6;
         posy -= Math.sin(moving)*.6;
-        p_avatar.setDepth(((-posy+20+window.innerHeight/2)+1));
-        pointer.setDepth(((-posy+20+window.innerHeight/2)));
-        p_avatar.x = -posx+window.innerWidth/2-1;
-        p_avatar.y = -posy+window.innerHeight/2-26;
-        p_shape.x = -posx+window.innerWidth/2;
-        p_shape.y = -posy+window.innerHeight/2-26;
-        pointer.x = -posx+window.innerWidth/2;
-        pointer.y = -posy+window.innerHeight/2;
+        const formx = -posx+window.innerWidth/2,
+        formy = -posy+window.innerHeight/2,
+        setx = -mapWidth*map_scale+window.innerWidth/2,
+        sety = -mapHeight*map_scale+window.innerHeight/2;
+        if ( arrow ) {
+          arrow.x = -posx+window.innerWidth/2;
+          arrow.y = -posy+window.innerHeight/2+80;
+        };
+
+        p_avatar.setDepth(formy+82);
+        pointer.setDepth(formy+81);
+        p_avatar.x = formx-1;
+        p_avatar.y = formy-26;
+        p_shape.x = formx;
+        p_shape.y = formy-26;
+        pointer.x = formx;
+        pointer.y = formy;
         main.cameras.main.scrollX = -posx;
         main.cameras.main.scrollY = -posy;
+
         // console.log(posx+" "+posy);
         if ( posx > window.innerWidth/2 )
-        posx = -mapWidth*map_scale+window.innerWidth/2;
-        if ( posy > -mapHeight*map_scale+window.innerHeight/2 )
-        posy = -mapHeight*map_scale+-mapHeight*map_scale+window.innerHeight/2;
-        if ( posx < -mapWidth*map_scale+window.innerWidth/2  )
+        posx = setx;
+        if ( posy > sety )
+        posy = -mapHeight*map_scale+sety;
+        if ( posx < setx  )
         posx = window.innerWidth/2;
-        if ( posy < -mapHeight*map_scale+-mapHeight*map_scale+window.innerHeight/2  )
-        posy = -mapHeight*map_scale+window.innerHeight/2;
+        if ( posy < -mapHeight*map_scale+sety  )
+        posy = sety;
       };
       let slow = 0.9;
       if ( !dragging && velocity && container.y-velocity <= top && container.y-velocity >= contHeight ) {
