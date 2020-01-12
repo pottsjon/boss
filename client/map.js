@@ -2,44 +2,6 @@ buildMap = function() {
   window.localStorage.removeItem('layer1');
   window.localStorage.removeItem('layer2');
   window.localStorage.removeItem('layer3');
-  
-  /*
-  let Pointer = new Phaser.Class({
-    Extends: Phaser.GameObjects.Image,
-    initialize:
-    function Pointer (scene, x, y) {
-      Phaser.GameObjects.Image.call(this, scene, x, y, 'pointer');
-      this.setDepth(y);
-    },
-    update: function (x, y) {
-      this.setDepth(((-y+20+window.innerHeight/2)));
-      this.x = -x+window.innerWidth/2;
-      this.y = -y+window.innerHeight/2;
-    }
-  });
-
-  let treeTrunk = new Phaser.Class({
-    Extends: Phaser.GameObjects.Image,
-    initialize:
-    function treeTrunk (scene, x, y, scale, tree) {
-      Phaser.GameObjects.Image.call(this, scene, x, y+155*scale, 'tree-trunk-'+tree); 
-      this.setScale(scale);
-      this.setDepth(y+1);
-    }
-  });
-
-  let treeTop = new Phaser.Class({
-    Extends: Phaser.GameObjects.Image,
-    initialize:
-    function treeTop (scene, x, y, tint, scale, tree) {
-      const tints = ['0xaca52f', '0xd28d2c', '0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
-      Phaser.GameObjects.Image.call(this, scene, x, y, 'tree-top-'+tree);
-      this.setScale(scale);
-      this.setTint(tints[tint]);
-      this.setDepth(y+2);
-    }
-  });
-  */
 
   let map_data = [], trees = [], objects = [], towns = [], tiles = [],
   tile_storage = window.localStorage.getItem('layer1'),
@@ -82,13 +44,13 @@ buildMap = function() {
   let pointer_data = [];
   const px = window.innerWidth/2,
   py = mapHeight*map_scale+window.innerHeight/2;
-  pointer = main.add.sprite(px, py, 'pointer' );
-  p_shape = main.add.sprite(px, py-26, 'pointer-mask' );
-  p_avatar = main.add.sprite(px-1, py-26, 'avatar-1' ).setDisplaySize(100,100);
+  pointer = main.add.sprite(px, py-80, 'pointer' );
+  p_shape = main.add.sprite(px, py-106, 'pointer-mask' );
+  p_avatar = main.add.sprite(px-1, py-106, 'avatar-1' ).setDisplaySize(100,100);
   const p_mask = p_shape.createBitmapMask();
   p_avatar.setMask(p_mask);
-  p_avatar.setDepth(py+81);
-  pointer.setDepth(py+80);
+  p_avatar.setDepth(py+1);
+  pointer.setDepth(py);
 
   /*
   main.add.graphics().lineStyle(2, 0x13270f).beginPath().strokeRect(window.innerWidth/2-215, 0, 430, window.innerHeight);
@@ -147,7 +109,7 @@ buildMap = function() {
   function tilePlacer(tiles) {
     for ( let i = 0; tiles.length-1 >= i; i++ ) {
       const tint = ['0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
-      main.add.sprite(tiles[i].x*map_scale, tiles[i].y*map_scale, 'white-square' ).setScale(map_scale).setTint(tint[tiles[i].tint]);
+      main.add.sprite(tiles[i].x*map_scale, tiles[i].y*map_scale, 'white-square' ).setScale(map_scale).setTint(tint[tiles[i].tint]).setInteractive({ cursor: 'pointer' });
     }
   }
 
@@ -265,5 +227,83 @@ buildMap = function() {
       }
       window.localStorage.setItem("layer3", JSON.stringify(objects));
     };
+  }
+
+  let posx = 0, posy = -mapHeight*map_scale,
+  start, end, angle, angleDeg;
+
+  function findAngle() {
+    start = { x: -posx+window.innerWidth/2, y: -posy+window.innerHeight/2 },
+    end = { x: main.input.activePointer.worldX, y: main.input.activePointer.worldY },
+    angle = Math.atan2(end.y - start.y, end.x - start.x),
+    angleDeg = Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI;
+  }
+
+  main.input.on('pointerdown', function (e) {
+    if ( e.button != 2 ) {
+      overCount();
+      arrow.setAngle(angleDeg);
+    } else {
+      moving = false;
+      main.scene.start('SceneB');
+    };
+  });
+
+  main.input.on('pointerup', function (e) {
+    if ( e.button != 2 ) {
+      overCount();
+      moving = angle;
+    } else {
+      moving = false;
+    };
+  });
+
+  main.input.on('pointermove', function (e) {
+    overCount();
+    arrow.setAngle(angleDeg);
+  });
+
+  function fadeArrow() {
+    main.tweens.addCounter({
+      from: 5,
+      to: 0,
+      duration: 500,
+      yoyo: false,
+      repeat: 0,
+      onUpdate: function (tween)
+      {
+        let t = tween.getValue();
+        arrow.setAlpha(t/10);
+        if ( t == 0 ) {
+          arrow.destroy();
+          arrow = false;
+          over = false;
+        };
+      }
+    });
+  }
+
+  // used during map creation process
+  let line;
+  function addLine() {
+    try { line.destroy() } catch(e) { };
+    const x11 = -posx+window.innerWidth/2,
+    y11 = -posy+window.innerHeight/2,
+    x12 = main.input.activePointer.worldX,
+    y12 = main.input.activePointer.worldY;
+    const int = getIntersection(x11, y11, x12, y12, -posx+mapWidth*map_scale, -posy, -posx+mapWidth*map_scale, -posy+mapHeight*map_scale ),
+    yint = yInt(x11, y11, x12, y12 );
+    line = main.add.line(x11, y11-mapHeight*map_scale, 0-posx, yint-posy-mapHeight*map_scale, int[0]-posx, int[1]-posy-mapHeight*map_scale, 0x000000, 0.5 ).setLineWidth(5)
+  }
+
+  let over_to;
+  function overCount() {
+    findAngle()
+    if ( !arrow )
+    arrow = main.add.sprite(-posx+window.innerWidth/2, -posy+window.innerHeight/2, 'arrow' ).setTint('0x62c466').setAlpha(0.5).setOrigin(0, 0.5);
+    try { Meteor.clearTimeout(over_to) } catch(e) { };
+    over_to = Meteor.setTimeout(function(){
+      fadeArrow()
+    }, 1000);
   }
 }
