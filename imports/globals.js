@@ -1,4 +1,4 @@
-let menu_button, menu_icon, container, main, map, map_scale, mapWidth, mapHeight, moving, pointer, p_avatar, p_shape, posx, posy, arrow, over;
+let menu_button, menu_icon, container, main, map, map_scale, mapWidth, mapHeight, moving, pointer, p_avatar, p_shape, posx, posy, arrow, over, map_overlay, coords, contHeight, left_stone, right_stone;
 
 randInt = function(min, max) {
     return Math.floor(Math.random() * (max - min + 1) ) + min;

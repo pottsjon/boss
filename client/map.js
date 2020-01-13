@@ -1,14 +1,68 @@
+updateMap = function() {
+  posx -= Math.cos(moving)*.6;
+  posy -= Math.sin(moving)*.6;
+  const formx = -posx+window.innerWidth/2,
+  formy = -posy+window.innerHeight/2,
+  setx = -mapWidth*map_scale+window.innerWidth/2,
+  sety = -mapHeight*map_scale+window.innerHeight/2;
+  if ( arrow ) {
+    arrow.x = formx;
+    arrow.y = formy;
+  }
+  p_avatar.setDepth(formy+1);
+  pointer.setDepth(formy);
+  p_avatar.x = formx-1;
+  p_avatar.y = formy-106;
+  p_shape.x = formx;
+  p_shape.y = formy-106;
+  pointer.x = formx;
+  pointer.y = formy-80;
+  map_overlay.x = -posx;
+  map_overlay.y = -posy;
+  coords.text = Math.floor(-posx)+' , '+Math.floor(-posy);
+  main.cameras.main.scrollX = -posx;
+  main.cameras.main.scrollY = -posy;
+  if ( posx > window.innerWidth/2 )
+  posx = setx;
+  if ( posy > sety )
+  posy = -mapHeight*map_scale+sety;
+  if ( posx < setx  )
+  posx = window.innerWidth/2;
+  if ( posy < -mapHeight*map_scale+sety  )
+  posy = sety;
+}
+
 buildMap = function() {
-  window.localStorage.removeItem('layer1');
-  window.localStorage.removeItem('layer2');
-  window.localStorage.removeItem('layer3');
+  map_scale = 0.5,
+  mapWidth = 8092,
+  mapHeight = 4032,
+  arrow = false,
+  moving = false,
+  dragging = false,
+  previous = false,
+  velocity = 0;
+
+  posx = 0,
+  posy = -mapHeight*map_scale;
+
+  let start, end, angle, angleDeg,
+  overlay_data = [];
+  
+  const container_width = 850,
+  prep_scale = ( window.innerWidth < container_width ? window.innerWidth/container_width : 1 ),
+  scale = ( window.innerWidth >= 500 ? 500/container_width : prep_scale ),
+  offset = (window.innerWidth-(container_width*scale))/2;
+
+  // window.localStorage.removeItem('layer1');
+  // window.localStorage.removeItem('layer2');
+  // window.localStorage.removeItem('layer3');
 
   let map_data = [], trees = [], objects = [], towns = [], tiles = [],
   tile_storage = window.localStorage.getItem('layer1'),
-  town_storage = window.localStorage.getItem('layer2');
+  town_storage = window.localStorage.getItem('layer2'),
   object_storage = window.localStorage.getItem('layer3');
 
-  createMap();
+  // createMap();
 
   let map_tiles = JSON.parse(localStorage.getItem('layer1')),
   clone_tiles = cloneItems(map_tiles, true),
@@ -58,101 +112,184 @@ buildMap = function() {
   let mask = shape.createGeometryMask();
   map = main.add.container(0, 0, map_data ).setSize(19000,19000).setInteractive().setMask(mask);
   */
-  
+
+  overlay_data.push( main.add.tileSprite(offset, window.innerHeight/2, window.innerWidth/2, window.innerHeight, 'stone-light-blue').setTileScale(0.5).setOrigin(1,0.5) );
+  overlay_data.push( main.add.tileSprite(window.innerWidth-offset, window.innerHeight/2, window.innerWidth/2, window.innerHeight, 'stone-light-blue').setTileScale(0.5).setOrigin(0,0.5) );
+
+  overlay_data.push( main.add.graphics().fillStyle(0x000000, 0.4).fillRoundedRect(window.innerWidth/2-67, window.innerHeight-100, 134, 40, 5) );
+  overlay_data.push( coords = main.add.text(window.innerWidth/2-67, window.innerHeight-92, Math.floor(-posx)+' , '+Math.floor(-posy), {
+    fontFamily: 'Roboto',
+    fontSize: 15,
+    fontStyle: 'bold',
+    color: '#ffffff',
+    align: 'center',
+    fixedWidth: 134
+  }).setStroke('#1119', 4) );
+
+  let topper = [],
+  btn_elements = [],
+  topper_data = [];
+
+  // topper
+  topper.push( main.add.sprite(0, 40, 'wooden-topper' ) );
+
+  // menu button in topper
+  menu_button = main.add.sprite(0, 0, 'square-brown' ).setInteractive({ cursor: 'pointer' });
+  menu_icon = main.add.sprite(0, -3, 'menu-icon' );
+  btn_elements.push( menu_button );
+  btn_elements.push( menu_icon );    
+  topper.push( main.add.container(325, 45, btn_elements ) );
+
+  // city name in topper
+  topper_data.push( main.add.sprite(120, 0, 'city-name-tag' ) );
+  topper_data.push( main.add.text(-45, -23, 'BERGTON', {
+    fontFamily: 'Roboto',
+    fontSize: 38,
+    color: '#ffffff',
+    align: 'center',
+    fixedWidth: 330
+  }) );
+
+  // population in topper
+  topper_data.push( main.add.sprite(370, 4, 'pill-brown' ) );
+  topper_data.push( main.add.text(300, -40, 'Population', {
+    fontFamily: 'Roboto',
+    fontSize: 22,
+    color: '#ffffff',
+    align: 'center',
+    fixedWidth: 140
+  }).setStroke('#443024', 6));
+  topper_data.push( main.add.text(300, -15, '128', {
+    fontFamily: 'Roboto',
+    fontSize: 32,
+    fontStyle: 'bold',
+    color: '#ffffff',
+    align: 'center',
+    fixedWidth: 140
+  }).setStroke('#3a2519', 6));
+
+  // current visitors in topper
+  topper_data.push( main.add.sprite(525, 4, 'pill-brown' ) );
+  topper_data.push( main.add.text(455, -40, 'Currently', {
+    fontFamily: 'Roboto',
+    fontSize: 22,
+    color: '#ffffff',
+    align: 'center',
+    fixedWidth: 140
+  }).setStroke('#443024', 6));
+  topper_data.push( main.add.text(455, -15, '8', {
+    fontFamily: 'Roboto',
+    fontSize: 32,
+    fontStyle: 'bold',
+    color: '#ffffff',
+    align: 'center',
+    fixedWidth: 140
+  }).setStroke('#3a2519', 6));
+  topper.push( main.add.container(-320, 43, topper_data ) );
+
+  overlay_data.push( main.add.container(window.innerWidth/2, 0, topper ).setScale(scale,scale) );
+
+  map_overlay = main.add.container(-posx, -posy, overlay_data).setDepth(1000000);
+
+  main.cameras.main.setSize(mapWidth*map_scale, mapHeight*map_scale);
+  main.cameras.main.scrollY = mapHeight*map_scale;
+
+  menu_button.on('pointerdown', function (e) {
+    moving = false;
+    main.scene.transition({ target: 'SceneB', duration: 1000 });
+  });
+
   /*
-  map.on('pointerdown', function (e) {
+  main.input.on('pointerdown', function (e) {
     if ( e.button != 2 ) {
-      const start = { x: window.innerWidth/2, y: window.innerHeight/2 },
-      end = { x: main.input.activePointer.worldX, y: main.input.activePointer.worldY },
-      angle = Math.atan2(end.y - start.y, end.x - start.x),
-      angleDeg = Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI;
-      moving = angle;
+      overCount();
+      arrow.setAngle(angleDeg);
     } else {
       moving = false;
     };
   });
+
+  main.input.on('pointerup', function (e) {
+    if ( e.button != 2 ) {
+      overCount();
+      moving = angle;
+    } else {
+      moving = false;
+    };
+  });  
   */
+
+  main.input.on('pointermove', function (e) {
+    overCount();
+    arrow.setAngle(angleDeg);
+  });
+
+  // adds and clears indicating arrow for movement
+  let over_to, arrow_large;
+  function overCount() {
+    findAngle()
+    const size = ( ( angleDeg <= -45 && angleDeg >= -135 ) || ( angleDeg >= 45 && angleDeg <= 135 ) ? 1 : 0.75 );
+    if ( size == 1 )
+    arrow_large = true;
+    if ( !arrow )
+    arrow = main.add.sprite(-posx+window.innerWidth/2, -posy+window.innerHeight/2, 'arrow' ).setTint('0x62c466').setAlpha(0.5).setOrigin(0, 0.5).setScale(size);
+    try { Meteor.clearTimeout(over_to) } catch(e) { };
+    over_to = Meteor.setTimeout(function(){
+      if ( arrow )
+      fadeArrow()
+    }, 1000);
+  }
+
+  function scaleArrow(from, to) {
+    main.tweens.addCounter({
+      from: from,
+      to: to,
+      duration: 200,
+      yoyo: false,
+      repeat: 0,
+      onUpdate: function (tween) {
+        if ( arrow )
+        arrow.setScale(tween.getValue());
+      }
+    });
+  }
+
+  function findAngle() {
+    start = { x: -posx+window.innerWidth/2, y: -posy+window.innerHeight/2 },
+    end = { x: main.input.activePointer.worldX, y: main.input.activePointer.worldY },
+    angle = Math.atan2(end.y - start.y, end.x - start.x),
+    angleDeg = Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI;
+    if ( ( ( angleDeg <= -45 && angleDeg >= -135 ) || ( angleDeg >= 45 && angleDeg <= 135 ) ) && !arrow_large && arrow ) {
+      arrow_large = true;
+      scaleArrow(0.75, 1);
+    } else if ( ( ( angleDeg > -45 && angleDeg < 0 ) || angleDeg < -135 || ( angleDeg < 45 && angleDeg > 0 ) || angleDeg > 135 ) && arrow_large && arrow ) {
+      arrow_large = false;
+      scaleArrow(1, 0.75);
+    };
+  }
+
+  function fadeArrow() {
+    main.tweens.addCounter({
+      from: 5,
+      to: 0,
+      duration: 500,
+      yoyo: false,
+      repeat: 0,
+      onUpdate: function (tween) {
+        let t = tween.getValue();
+        if ( arrow ) {
+          arrow.setAlpha(t/10);
+          if ( t == 0 ) {
+            arrow.destroy();
+            arrow = false;
+            over = false;
+          };
+        };
+      }
+    });
+  }
   
-  function cloneItems(objects, tint, tree, scale) {
-    let clones = [];
-    const outer = ( !tint ? 2 : 1.25 ),
-    winTop = mapHeight+window.innerHeight*outer,
-    winBottom = mapHeight+mapHeight-window.innerHeight*outer,
-    winLeft = window.innerWidth*outer,
-    winRight = mapWidth-window.innerWidth*outer;
-    for ( let i = 0; objects.length-1 >= i; i++ ) {
-      const x = objects[i].x,
-      y = objects[i].y,
-      set_tint = ( !tint ? false : objects[i].tint ),
-      set_tree = ( !tree ? false : objects[i].tree ),
-      set_scale = ( !scale ? 1 : objects[i].scale );
-      if ( y <= winTop )
-      clones.push({ x: x, y: y+mapHeight, tint: set_tint, tree: set_tree, scale: set_scale });
-      if ( y >= winBottom )
-      clones.push({ x: x, y: y-mapHeight, tint: set_tint, tree: set_tree, scale: set_scale });
-      if ( x <= winLeft )
-      clones.push({ x: x+mapWidth, y: y, tint: set_tint, tree: set_tree, scale: set_scale });
-      if ( x >= winRight )
-      clones.push({ x: x-mapWidth, y: y, tint: set_tint, tree: set_tree, scale: set_scale });
-      if ( y <= winTop && x <= winLeft )
-      clones.push({ x: x+mapWidth, y: y+mapHeight, tint: set_tint, tree: set_tree, scale: set_scale });
-      if ( y <= winTop && x >= winRight )
-      clones.push({ x: x-mapWidth, y: y+mapHeight, tint: set_tint, tree: set_tree, scale: set_scale });
-      if ( y >= winBottom && x <= winLeft )
-      clones.push({ x: x+mapWidth, y: y-mapHeight, tint: set_tint, tree: set_tree, scale: set_scale });
-      if ( y >= winBottom && x >= winRight )
-      clones.push({ x: x-mapWidth, y: y-mapHeight, tint: set_tint, tree: set_tree, scale: set_scale });
-    }
-    return clones;
-  }
-
-  function tilePlacer(tiles) {
-    for ( let i = 0; tiles.length-1 >= i; i++ ) {
-      const tint = ['0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
-      main.add.sprite(tiles[i].x*map_scale, tiles[i].y*map_scale, 'white-square' ).setScale(map_scale).setTint(tint[tiles[i].tint]).setInteractive({ cursor: 'pointer' });
-    }
-  }
-
-  function townPlacer(towns) {
-    for ( let i = 0; towns.length-1 >= i; i++ ) {
-      const x = towns[i].x*map_scale,
-      y = towns[i].y*map_scale;
-      main.add.graphics().fillStyle(0x000000, 1).fillCircle(x, y, 150).setAlpha(0.5);
-    }
-  }
-
-  function objectPlacer(object) {
-    for ( let i = 0; object.length-1 >= i; i++ ) {
-      const x = object[i].x*map_scale,
-      y = object[i].y*map_scale,
-      tree = object[i].tree,
-      scale = object[i].scale;
-      if ( !tree ) {
-        main.add.sprite(x+20, y-32, 'sign' );
-        main.add.text(x-58, y-92, 'Robertown'.toUpperCase(), {
-          fontFamily: 'Roboto',
-          fontSize: 20,
-          fontStyle: 'bold',
-          color: '#ffffff',
-          align: 'center',
-          fixedWidth: 152
-        }).setStroke('#5e3b1a', 4);
-        main.add.sprite(x-40, y+61, 'stand' );
-        main.add.sprite(x-45, y+12, 'gate' );
-      } else {
-        /*
-        main.add.existing(new treeTrunk(main, x, y, scale, tree));
-        main.add.existing(new treeTop(main, x, y, object[i].tint, scale, tree));
-        */
-        const tint = ['0xaca52f', '0xd28d2c', '0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
-        main.add.sprite(x+2, y, 'tree-trunk-'+tree ).setScale(scale).setTint('0x000000').setAlpha(0.4).setDepth(y);
-        main.add.sprite(x+2, y-155*scale, 'tree-top-'+tree ).setScale(scale).setTint('0x000000').setAlpha(0.4).setDepth(y+1);
-        main.add.sprite(x, y, 'tree-trunk-'+tree ).setScale(scale).setDepth(y);
-        main.add.sprite(x, y-155*scale, 'tree-top-'+tree ).setScale(scale).setTint(tint[object[i].tint]).setDepth(y+1);
-      };
-    }
-  }
-
+  // MOVE TO SERVER - used during initial map creation
   function createMap() {
     let map_x = 0, map_y = 0;
     if ( !tile_storage ) {
@@ -229,58 +366,94 @@ buildMap = function() {
     };
   }
 
-  let posx = 0, posy = -mapHeight*map_scale,
-  start, end, angle, angleDeg;
-
-  function findAngle() {
-    start = { x: -posx+window.innerWidth/2, y: -posy+window.innerHeight/2 },
-    end = { x: main.input.activePointer.worldX, y: main.input.activePointer.worldY },
-    angle = Math.atan2(end.y - start.y, end.x - start.x),
-    angleDeg = Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI;
+  function cloneItems(objects, tint, tree, scale) {
+    let clones = [];
+    const outer = ( !tint ? 2 : 1.25 ),
+    winTop = mapHeight+window.innerHeight*outer,
+    winBottom = mapHeight+mapHeight-window.innerHeight*outer,
+    winLeft = window.innerWidth*outer,
+    winRight = mapWidth-window.innerWidth*outer;
+    for ( let i = 0; objects.length-1 >= i; i++ ) {
+      const x = objects[i].x,
+      y = objects[i].y,
+      set_tint = ( !tint ? false : objects[i].tint ),
+      set_tree = ( !tree ? false : objects[i].tree ),
+      set_scale = ( !scale ? 1 : objects[i].scale );
+      if ( y <= winTop )
+      clones.push({ x: x, y: y+mapHeight, tint: set_tint, tree: set_tree, scale: set_scale });
+      if ( y >= winBottom )
+      clones.push({ x: x, y: y-mapHeight, tint: set_tint, tree: set_tree, scale: set_scale });
+      if ( x <= winLeft )
+      clones.push({ x: x+mapWidth, y: y, tint: set_tint, tree: set_tree, scale: set_scale });
+      if ( x >= winRight )
+      clones.push({ x: x-mapWidth, y: y, tint: set_tint, tree: set_tree, scale: set_scale });
+      if ( y <= winTop && x <= winLeft )
+      clones.push({ x: x+mapWidth, y: y+mapHeight, tint: set_tint, tree: set_tree, scale: set_scale });
+      if ( y <= winTop && x >= winRight )
+      clones.push({ x: x-mapWidth, y: y+mapHeight, tint: set_tint, tree: set_tree, scale: set_scale });
+      if ( y >= winBottom && x <= winLeft )
+      clones.push({ x: x+mapWidth, y: y-mapHeight, tint: set_tint, tree: set_tree, scale: set_scale });
+      if ( y >= winBottom && x >= winRight )
+      clones.push({ x: x-mapWidth, y: y-mapHeight, tint: set_tint, tree: set_tree, scale: set_scale });
+    }
+    return clones;
   }
 
-  main.input.on('pointerdown', function (e) {
-    if ( e.button != 2 ) {
-      overCount();
-      arrow.setAngle(angleDeg);
-    } else {
-      moving = false;
-      main.scene.start('SceneB');
-    };
-  });
-
-  main.input.on('pointerup', function (e) {
-    if ( e.button != 2 ) {
-      overCount();
-      moving = angle;
-    } else {
-      moving = false;
-    };
-  });
-
-  main.input.on('pointermove', function (e) {
-    overCount();
-    arrow.setAngle(angleDeg);
-  });
-
-  function fadeArrow() {
-    main.tweens.addCounter({
-      from: 5,
-      to: 0,
-      duration: 500,
-      yoyo: false,
-      repeat: 0,
-      onUpdate: function (tween)
-      {
-        let t = tween.getValue();
-        arrow.setAlpha(t/10);
-        if ( t == 0 ) {
-          arrow.destroy();
-          arrow = false;
-          over = false;
+  function tilePlacer(tiles) {
+    for ( let i = 0; tiles.length-1 >= i; i++ ) {
+      const tint = ['0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
+      main.add.sprite(tiles[i].x*map_scale, tiles[i].y*map_scale, 'white-square' ).setScale(map_scale).setTint(tint[tiles[i].tint]).setInteractive({ cursor: 'pointer' }).on('pointerdown', function (e) {
+        if ( e.button != 2 ) {
+          overCount();
+          arrow.setAngle(angleDeg);
+        } else {
+          moving = false;
         };
-      }
-    });
+      }).on('pointerup', function (e) {
+        if ( e.button != 2 ) {
+          overCount()
+          moving = angle;
+        } else {
+          moving = false;
+        };
+      });
+    }
+  }
+
+  function townPlacer(towns) {
+    for ( let i = 0; towns.length-1 >= i; i++ ) {
+      const x = towns[i].x*map_scale,
+      y = towns[i].y*map_scale;
+      main.add.graphics().fillStyle(0x000000, 1).fillCircle(x, y, 150).setAlpha(0.5);
+    }
+  }
+
+  function objectPlacer(object) {
+    for ( let i = 0; object.length-1 >= i; i++ ) {
+      const x = object[i].x*map_scale,
+      y = object[i].y*map_scale,
+      tree = object[i].tree,
+      scale = object[i].scale;
+      if ( !tree ) {
+        main.add.sprite(x+20, y-32, 'sign' );
+        main.add.text(x-58, y-92, 'Robertown'.toUpperCase(), {
+          fontFamily: 'Roboto',
+          fontSize: 20,
+          fontStyle: 'bold',
+          color: '#ffffff',
+          align: 'center',
+          fixedWidth: 152
+        }).setStroke('#5e3b1a', 4);
+        main.add.sprite(x-40, y+61, 'stand' );
+        main.add.sprite(x-45, y+12, 'gate' );
+      } else {
+        const tint = ['0xaca52f', '0xd28d2c', '0x28811a', '0x149535', '0x2a5922', '0x2f8938', '0x1d803d', '0x468c2e'];
+        main.add.sprite(x+2, y, 'tree-trunk-'+tree ).setScale(scale).setTint('0x000000').setAlpha(0.4).setDepth(y);
+        main.add.sprite(x+2, y-155*scale, 'tree-top-'+tree ).setScale(scale).setTint('0x000000').setAlpha(0.4).setDepth(y+1);
+        main.add.sprite(x, y, 'tree-trunk-'+tree ).setScale(scale).setDepth(y);
+        main.add.sprite(x, y-155*scale, 'tree-top-'+tree ).setScale(scale).setTint(tint[object[i].tint]).setDepth(y+1);
+      };
+    }
   }
 
   // used during map creation process
@@ -294,16 +467,5 @@ buildMap = function() {
     const int = getIntersection(x11, y11, x12, y12, -posx+mapWidth*map_scale, -posy, -posx+mapWidth*map_scale, -posy+mapHeight*map_scale ),
     yint = yInt(x11, y11, x12, y12 );
     line = main.add.line(x11, y11-mapHeight*map_scale, 0-posx, yint-posy-mapHeight*map_scale, int[0]-posx, int[1]-posy-mapHeight*map_scale, 0x000000, 0.5 ).setLineWidth(5)
-  }
-
-  let over_to;
-  function overCount() {
-    findAngle()
-    if ( !arrow )
-    arrow = main.add.sprite(-posx+window.innerWidth/2, -posy+window.innerHeight/2, 'arrow' ).setTint('0x62c466').setAlpha(0.5).setOrigin(0, 0.5);
-    try { Meteor.clearTimeout(over_to) } catch(e) { };
-    over_to = Meteor.setTimeout(function(){
-      fadeArrow()
-    }, 1000);
   }
 }
