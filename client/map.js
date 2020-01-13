@@ -47,22 +47,22 @@ buildMap = function() {
 
   let start, end, angle, angleDeg,
   overlay_data = [];
-  
+
   const container_width = 850,
   prep_scale = ( window.innerWidth < container_width ? window.innerWidth/container_width : 1 ),
   scale = ( window.innerWidth >= 500 ? 500/container_width : prep_scale ),
   offset = (window.innerWidth-(container_width*scale))/2;
 
-  // window.localStorage.removeItem('layer1');
-  // window.localStorage.removeItem('layer2');
-  // window.localStorage.removeItem('layer3');
+  window.localStorage.removeItem('layer1');
+  window.localStorage.removeItem('layer2');
+  window.localStorage.removeItem('layer3');
 
   let map_data = [], trees = [], objects = [], towns = [], tiles = [],
   tile_storage = window.localStorage.getItem('layer1'),
   town_storage = window.localStorage.getItem('layer2'),
   object_storage = window.localStorage.getItem('layer3');
 
-  // createMap();
+  createMap();
 
   let map_tiles = JSON.parse(localStorage.getItem('layer1')),
   clone_tiles = cloneItems(map_tiles, true),

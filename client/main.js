@@ -100,7 +100,7 @@ Template.main.onRendered(function () {
         loadAssets();
       },
       create: function () {
-        this.scene.start('SceneA');
+        main.scene.start('SceneA');
       }
     });
     let game = new Phaser.Game({
